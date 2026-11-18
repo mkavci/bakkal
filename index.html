@@ -20,7 +20,7 @@ input:focus,select:focus,button:focus-visible{outline:3px solid var(--ok);outlin
 label{display:block;font-size:14px;color:var(--mut);margin:10px 0 4px}
 button{border:0;border-radius:12px;padding:13px 16px;min-height:50px;font-weight:700;background:var(--pri);color:var(--pritx);cursor:pointer}
 button.alt{background:var(--card);color:var(--ink);border:2px solid var(--line)}
-button.bad{background:var(--bad)}
+button.bad{background:var(--bad);color:#fff}
 .row{display:flex;gap:8px}.row>*{flex:1}.row>.fix{flex:0 0 auto}
 .search{position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5}
 .search input{font-size:22px;min-height:60px;border-color:var(--ink)}
@@ -138,8 +138,6 @@ body.kb .cbar .total{font-size:16px}
     <div class="cbar"><div class="total"><span>Toplam</span><b id="k_tot"></b></div><div class="row"><input id="k_pay" inputmode="decimal" placeholder="Verilen para (₺)"><div class="chg" id="k_chg"></div></div></div>
     <div class="row"><input id="k_q" placeholder="Ürün adı veya barkod" autocomplete="off"><button class="alt fix" id="k_scan" aria-label="Barkod tara">📷</button></div>
     <div id="k_res"></div><div id="k_ls"></div>
-    
-    
     <div class="row" style="margin-top:8px"><input id="k_man" inputmode="decimal" placeholder="Başka tutar ekle (₺)"><button class="alt fix" id="k_madd">Ekle</button></div>
     <p><button class="bad" id="k_clr" style="width:100%">Sepeti boşalt</button></p>
   </section>
@@ -199,9 +197,10 @@ body.kb .cbar .total{font-size:16px}
   <p><button class="bad" id="f_del" style="width:100%">Ürünü sil</button></p>
 </div></div>
 
-<div id="scan" hidden><video id="cam" playsinline muted></video><div id="reader" hidden style="flex:1;min-height:0;overflow:hidden"></div><div id="zoomb" hidden><input type="range" id="zoom" aria-label="Yakınlaştır"></div><p>Barkodu çerçeveye getirin. Bulanıksa telefonu biraz uzaklaştırıp yakınlaştırma çubuğunu kullanın.</p><div class="row" style="margin:0 12px 12px"><label class="lbtn" for="phf">📸 Fotoğraf çek</label><input type="file" id="phf" accept="image/*" capture="environment" hidden><button class="alt" id="scanx">Kapat</button></div><div id="rd2" hidden></div></div>
+<div id="scan" hidden><video id="cam" playsinline muted></video><div id="reader" hidden style="flex:1;min-height:0;overflow:hidden"></div><div id="zoomb" hidden><input type="range" id="zoom" aria-label="Yakınlaştır"></div><p id="scanmsg">Barkodu çerçeveye getirin. Bulanıksa telefonu biraz uzaklaştırıp yakınlaştırma çubuğunu kullanın.</p><div class="row" style="margin:0 12px 12px"><label class="lbtn" for="phf">📸 Fotoğraf çek</label><input type="file" id="phf" accept="image/*" capture="environment" hidden><button class="alt" id="scanx">Kapat</button></div><div id="rd2" hidden></div></div>
 <div id="toast" hidden></div>
 
+<script async src="https://cdn.jsdelivr.net/npm/@undecaf/zbar-wasm@0.11.0/dist/inlined/index.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
@@ -246,6 +245,7 @@ const r2=n=>Math.round((+n+Number.EPSILON)*100)/100;
 const num=v=>{const n=parseFloat(String(v).trim().replace(',','.'));return isNaN(n)?null:n};
 const ls=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
 const S=Object.assign({t:25,m:100,b:30,d:30,om:true,os:true,od:true,th:"auto",c:{},sk:14,mod:{skt:true,ord:true,cart:true}},ls('bk_set',{}));
+S.mod=Object.assign({skt:true,ord:true,cart:true},S.mod||{});S.c=S.c||{};
 let sb,P=[],cur=null,tmr;
 
 function toast(m,e){const t=$('#toast');t.textContent=m;t.className=e?'e':'';t.hidden=false;clearTimeout(tmr);tmr=setTimeout(()=>t.hidden=true,e?5000:2200)}
@@ -268,6 +268,13 @@ async function init(){
  sb=supabase.createClient(cfg.url,cfg.key);
  const {data}=await sb.auth.getSession();
  data.session?start(data.session):show('login');
+ warmScanner();
+}
+/* zbar kullanılacaksa (iPhone vb.) wasm'ı önceden ısıt */
+async function warmScanner(){
+ if(window.BarcodeDetector)return;
+ for(let i=0;i<40&&!zb();i++)await new Promise(r=>setTimeout(r,200));
+ if(zb())zscanner();
 }
 async function start(session){
  $('#who').textContent='Giriş: '+(session.user.email||'');
@@ -386,20 +393,32 @@ async function del(){
 }
 
 /* ---- Barkod tarama ---- */
-let scanCb=null,scanStop=null;
-async function scan(cb){
- scanCb=cb;
- if('BarcodeDetector' in window){$('#cam').hidden=false;$('#reader').hidden=true;return scanNative(cb)}
- return scanLib(cb);
-}
+let scanCb=null,scanStop=null,scanBusy=false;
+const zb=()=>window.zbarWasm&&typeof window.zbarWasm.scanImageData==='function'?window.zbarWasm:null;
 const eanOk=c=>{if(!/^(\d{8}|\d{13})$/.test(c))return true;const d=[...c].map(Number),k=d.pop();let t=0;d.reverse().forEach((n,i)=>t+=n*(i%2?1:3));return (10-t%10)%10===k};
+
+let AC;
+function beep(){try{AC=AC||new AudioContext();if(AC.state==='suspended')AC.resume();const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=1100;g.gain.value=.15;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+.08)}catch{}}
+
+/* zbar: yalnızca ürün barkodu türlerini ara (QR vb. aranmaz, daha hızlı) */
+let zsc,zinit=false;
+async function zscanner(){
+ if(zinit)return zsc;zinit=true;
+ try{const z=zb();zsc=await z.getDefaultScanner();
+  zsc.setConfig(z.ZBarSymbolType.ZBAR_NONE,z.ZBarConfigType.ZBAR_CFG_ENABLE,0);
+  for(const t of ['ZBAR_EAN13','ZBAR_EAN8','ZBAR_UPCA','ZBAR_UPCE','ZBAR_CODE128'])
+   zsc.setConfig(z.ZBarSymbolType[t],z.ZBarConfigType.ZBAR_CFG_ENABLE,1);
+ }catch{zsc=undefined}
+ return zsc;
+}
+
 function camTune(track){
- const zb=$('#zoomb'),z=$('#zoom');zb.hidden=true;if(!track||!track.getCapabilities)return;
+ const zbx=$('#zoomb'),z=$('#zoom');zbx.hidden=true;if(!track||!track.getCapabilities)return;
  let cap={};try{cap=track.getCapabilities()}catch{}
  const cons={};const ap=o=>{Object.assign(cons,o);return track.applyConstraints({advanced:[cons]}).catch(()=>{})};
  if(cap.focusMode&&cap.focusMode.includes('continuous'))ap({focusMode:'continuous'});
  if(cap.zoom){z.min=cap.zoom.min;z.max=Math.min(cap.zoom.max,8);z.step=cap.zoom.step||.1;
-  const v0=Math.min(Math.max(cap.zoom.min*2,2),+z.max);z.value=v0;zb.hidden=false;ap({zoom:v0});
+  const v0=+cap.zoom.min;z.value=v0;zbx.hidden=false;ap({zoom:v0});
   z.oninput=()=>{ap({zoom:+z.value})}}
 }
 async function decodeFile(file){
@@ -407,10 +426,11 @@ async function decodeFile(file){
  const w=Math.round(bmp.width*sc),h=Math.round(bmp.height*sc);
  for(const rot of [0,90,270]){
   const c=document.createElement('canvas');c.width=rot?h:w;c.height=rot?w:h;
-  const x=c.getContext('2d');x.translate(c.width/2,c.height/2);x.rotate(rot*Math.PI/180);x.drawImage(bmp,-w/2,-h/2,w,h);
+  const x=c.getContext('2d',{willReadFrequently:true});x.translate(c.width/2,c.height/2);x.rotate(rot*Math.PI/180);x.drawImage(bmp,-w/2,-h/2,w,h);
   try{
    let t=null;
    if('BarcodeDetector' in window){const r=await new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128']}).detect(c);t=r[0]&&r[0].rawValue}
+   else if(zb()){const r=await zb().scanImageData(x.getImageData(0,0,c.width,c.height),await zscanner());const q=r.find(y=>/EAN|UPC|CODE128/.test(y.typeName)&&eanOk(y.decode()));t=q&&q.decode()}
    else if(window.Html5Qrcode){const F=Html5QrcodeSupportedFormats,b=await new Promise(r=>c.toBlob(r,'image/jpeg',.95));
     const q=new Html5Qrcode('rd2',{verbose:false,formatsToSupport:[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.CODE_128]});
     t=await q.scanFile(new File([b],'a.jpg',{type:'image/jpeg'}),false);try{q.clear()}catch{}}
@@ -423,6 +443,60 @@ $('#phf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)r
  let code=null;try{code=await decodeFile(f)}catch{}
  if(!code)return toast('Barkod okunamadı. Barkodu net ve ekranı dolduracak şekilde çekip tekrar deneyin ya da elle yazın.',1);
  const cb=scanCb;if(scanStop)scanStop();if(cb)cb(code)};
+
+/* multi=true: kamera açık kalır, her okumada cb çağrılır */
+async function scan(cb,multi){
+ if(scanBusy||!$('#scan').hidden)return;
+ scanBusy=true;scanCb=cb;
+ try{AC=AC||new AudioContext();AC.resume&&AC.resume()}catch{}
+ try{
+  for(let i=0;i<20&&!window.BarcodeDetector&&!zb();i++)await new Promise(r=>setTimeout(r,100));
+  let mode=null;
+  if(window.BarcodeDetector){try{if((await BarcodeDetector.getSupportedFormats()).includes('ean_13'))mode='native'}catch{}}
+  if(!mode&&zb())mode='zbar';
+  $('#scanmsg').textContent=multi?'Ürünleri art arda okutun, kamera açık kalır. Bitince Kapat’a basın.':'Barkodu çerçeveye getirin. Bulanıksa telefonu biraz uzaklaştırıp yakınlaştırma çubuğunu kullanın.';
+  if(!mode)return await scanLib(cb);
+  $('#cam').hidden=false;$('#reader').hidden=true;
+  return await scanCam(cb,multi,mode);
+ }finally{scanBusy=false}
+}
+
+async function scanCam(cb,multi,mode){
+ let stream;
+ try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}})}
+ catch{return toast('Kamera izni verilmedi (sayfa https olmalı)',1)}
+ const v=$('#cam');v.srcObject=stream;$('#scan').hidden=false;
+ try{await v.play()}catch{}
+ camTune(stream.getVideoTracks()[0]);
+ let on=true,last='',lt=0,errs=0;
+ const stop=()=>{if(!on)return;on=false;stream.getTracks().forEach(t=>t.stop());v.srcObject=null;$('#scan').hidden=true};
+ scanStop=stop;$('#scanx').onclick=stop;
+ const det=mode==='native'?new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128']}):null;
+ const sc=mode==='zbar'?await zscanner():undefined;
+ const c=document.createElement('canvas'),x=c.getContext('2d',{willReadFrequently:true});
+ const read=async()=>{
+  if(det){const b=await det.detect(v);const r=b.find(y=>eanOk(y.rawValue));return r&&r.rawValue}
+  const W=v.videoWidth,H=v.videoHeight,w=Math.round(W*.8),h=Math.round(H*.6);
+  c.width=w;c.height=h;x.drawImage(v,(W-w)>>1,(H-h)>>1,w,h,0,0,w,h);
+  const r=await zb().scanImageData(x.getImageData(0,0,w,h),sc);
+  const q=r.find(y=>/EAN|UPC|CODE128/.test(y.typeName)&&eanOk(y.decode()));
+  return q&&q.decode();
+ };
+ (async function loop(){
+  if(!on)return;
+  try{
+   if(v.videoWidth){
+    const code=await read();errs=0;
+    if(on&&code&&!(code===last&&Date.now()-lt<2000)){
+     last=code;lt=Date.now();navigator.vibrate&&navigator.vibrate(60);beep();
+     if(!multi){stop();cb(code);return}
+     cb(code);
+    }
+   }
+  }catch(e){if(++errs>=5){stop();scanLib(cb);return}}
+  setTimeout(loop,30);
+ })();
+}
 async function scanLib(cb){
  if(!window.Html5Qrcode)return toast('Barkod okuyucu yüklenemedi. İnternet bağlantısını kontrol edin veya barkodu yazın.',1);
  const ov=$('#scan');$('#cam').hidden=true;$('#reader').hidden=false;$('#zoomb').hidden=true;ov.hidden=false;
@@ -432,36 +506,29 @@ async function scanLib(cb){
  const stop=async()=>{if(done)return;done=true;try{await h.stop()}catch{}try{h.clear()}catch{}ov.hidden=true;$('#reader').hidden=true};
  scanStop=stop;$('#scanx').onclick=stop;
  try{
-  await h.start({facingMode:'environment'},{fps:10,videoConstraints:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}},qrbox:(w,hh)=>({width:Math.max(150,w-30),height:Math.max(100,Math.min(180,hh-30))})},
-   t=>{if(done||!eanOk(t))return;navigator.vibrate&&navigator.vibrate(60);stop();cb(t)},()=>{});
+  await h.start({facingMode:'environment'},{fps:15,videoConstraints:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}},qrbox:(w,hh)=>({width:Math.max(150,w-30),height:Math.max(100,Math.min(180,hh-30))})},
+   t=>{if(done||!eanOk(t))return;navigator.vibrate&&navigator.vibrate(60);beep();stop();cb(t)},()=>{});
   const vid=document.querySelector('#reader video');camTune(vid&&vid.srcObject&&vid.srcObject.getVideoTracks()[0]);
  }catch(e){await stop();toast('Kamera açılamadı. Kamera iznini verin (sayfa https olmalı) veya barkodu yazın.',1)}
-}
-async function scanNative(cb){
- let stream;
- try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}})}catch{return toast('Kamera izni verilmedi (sayfa https olmalı)',1)}
- const v=$('#cam');v.srcObject=stream;$('#scan').hidden=false;await v.play();camTune(stream.getVideoTracks()[0]);
- const det=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128']});let on=true;
- const stop=()=>{on=false;stream.getTracks().forEach(t=>t.stop());$('#scan').hidden=true};scanStop=stop;
- $('#scanx').onclick=stop;
- (async function loop(){if(!on)return;try{const b=await det.detect(v);if(b[0]&&eanOk(b[0].rawValue)){navigator.vibrate?.(60);stop();cb(b[0].rawValue);return}}catch{}setTimeout(loop,180)})();
 }
 
 /* ---- Olaylar ---- */
 $('#s_go').onclick=()=>{const url=$('#s_url').value.trim().replace(/\/$/,''),key=$('#s_key').value.trim();
  if(!/^https:\/\/.+\.supabase\.co$/.test(url)||key.length<20)return toast('Adres veya anahtar hatalı',1);
  localStorage.setItem('bk_cfg',JSON.stringify({url,key}));location.reload()};
-$('#l_go').onclick=async()=>{const {data,error}=await sb.auth.signInWithPassword({email:$('#l_mail').value.trim(),password:$('#l_pw').value});
+$('#l_go').onclick=async()=>{
+ if(!sb)return toast('Bağlantı kurulamadı, sayfayı yenileyin',1);
+ const {data,error}=await sb.auth.signInWithPassword({email:$('#l_mail').value.trim(),password:$('#l_pw').value});
  error?toast('Giriş başarısız: e-posta veya şifre hatalı',1):start(data.session)};
 $('#l_pw').addEventListener('keydown',e=>{if(e.key==='Enter')$('#l_go').click()});
-$('#out').onclick=async()=>{await sb.auth.signOut();location.reload()};
+$('#out').onclick=async()=>{try{await sb.auth.signOut()}catch{}location.reload()};
 $('#reset').onclick=()=>{if(confirm('Bağlantı bilgisi silinsin mi?')){localStorage.removeItem('bk_cfg');location.reload()}};
 $('#reload').onclick=()=>load().then(()=>toast('Yenilendi'));
 $('#q').oninput=renderSearch;$('#q').addEventListener('keydown',e=>{if(e.key==='Enter')e.target.blur()});
 $('#qscan').onclick=()=>scan(c=>{$('#q').value=c;renderSearch()});
 document.addEventListener('click',e=>{
- const it=e.target.closest('.item');if(it){const p=P.find(x=>x.id===it.dataset.id);if(p)openEdit(p);return}
- if(e.target.id==='addq')openEdit(null,/^\d{6,}$/.test($('#q').value.trim())?$('#q').value.trim():'')&&0;
+ const it=e.target.closest('.item[data-id]');if(it){const p=P.find(x=>x.id===it.dataset.id);if(p)openEdit(p);return}
+ if(e.target.id==='addq')openEdit(null,/^\d{6,}$/.test($('#q').value.trim())?$('#q').value.trim():'');
 });
 document.querySelectorAll('nav [data-v]').forEach(b=>b.onclick=()=>route(b.dataset.v));
 $('#add').onclick=()=>openEdit(null);
@@ -594,7 +661,7 @@ $('#o_share').onclick=()=>{
 let K=[];
 function kfind(t){const raw=t.trim(),q=norm(raw);if(!q)return[];const ex=P.filter(p=>p.barcode===raw);if(ex.length)return ex;
  return P.filter(p=>q.split(/\s+/).every(w=>norm(p.name).includes(w)||(p.barcode||'').includes(w))).slice(0,6)}
-function kadd(p){const x=K.find(k=>k.id===p.id);if(x)x.q=r2(x.q+1);else K.push({id:p.id,q:1});$('#k_q').value='';paintCart();$('#k_q').focus()}
+function kadd(p,quiet){const x=K.find(k=>k.id===p.id);if(x)x.q=r2(x.q+1);else K.push({id:p.id,q:1});$('#k_q').value='';paintCart();if(!quiet)$('#k_q').focus()}
 function paintCart(){
  $('#k_res').innerHTML=kfind($('#k_q').value).map(p=>`<button class="alt kres" data-pid="${esc(p.id)}">${esc(p.name)} · <b>${TL(p.sell_price)}</b></button>`).join('');
  let tot=0;
@@ -607,7 +674,11 @@ function paintCart(){
 }
 $('#k_q').oninput=paintCart;$('#k_pay').oninput=paintCart;
 $('#k_q').addEventListener('keydown',e=>{if(e.key==='Enter'){const f=kfind($('#k_q').value);if(f.length===1)kadd(f[0]);else e.target.blur()}});
-$('#k_scan').onclick=()=>scan(c=>{const p=P.find(x=>x.barcode===c);if(p)kadd(p);else toast('Barkod kayıtlı değil: '+c,1)});
+/* Sürekli tarama: kamera açık kalır, ürünler art arda sepete eklenir */
+$('#k_scan').onclick=()=>scan(c=>{
+ const p=P.find(x=>x.barcode===c);
+ if(p){kadd(p,true);toast(p.name+' · '+TL(p.sell_price))}else toast('Barkod kayıtlı değil: '+c,1)
+},true);
 $('#k_res').onclick=e=>{const b=e.target.closest('[data-pid]');const p=b&&P.find(x=>x.id===b.dataset.pid);if(p)kadd(p)};
 $('#k_ls').onclick=e=>{const r=e.target.closest('[data-i]');if(!r)return;const i=+r.dataset.i,k=K[i];
  if(e.target.classList.contains('kp'))k.q=r2(k.q+1);
@@ -625,7 +696,7 @@ document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g
 function vv(){const v=window.visualViewport;document.documentElement.style.setProperty('--vh',(v?v.height:innerHeight)+'px');if(v&&!$('#sheet').hidden)window.scrollTo(0,0)}
 if(window.visualViewport){visualViewport.addEventListener('resize',vv);visualViewport.addEventListener('scroll',vv)}
 vv();
-const TXT=el=>!!el&&/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName)&&!/^(checkbox|color|file|button)$/.test(el.type);
+const TXT=el=>!!el&&/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName)&&!/^(checkbox|color|file|button|range)$/.test(el.type);
 document.addEventListener('focusin',e=>{const t=e.target;if(!TXT(t))return;document.body.classList.add('kb');
  if(t.closest('.search,.cbar'))return;
  setTimeout(()=>t.scrollIntoView({block:'center',behavior:'smooth'}),350)});
