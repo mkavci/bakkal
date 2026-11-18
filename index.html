@@ -11,27 +11,27 @@
 :root[data-theme=dark]{color-scheme:dark;--bg:#0f1713;--card:#1a2620;--line:#2f3f36;--ink:#e8efe9;--mut:#9fb0a5;--pri:#2a7a53}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 "Segoe UI",system-ui,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+body{margin:0;background:var(--bg);color:var(--ink);font-size:calc(16px*var(--fs,1));line-height:1.4;font-family:var(--font,"Segoe UI",system-ui,sans-serif);padding-bottom:calc(76px + env(safe-area-inset-bottom))}
 .wrap{max-width:900px;margin:0 auto;padding:max(12px,env(safe-area-inset-top)) 14px 14px}
-h1{font-size:22px;margin:8px 0 12px}h2{font-size:17px;margin:20px 0 8px}
+h1{font-size:1.375em;margin:8px 0 12px}h2{font-size:1.0625em;margin:20px 0 8px}
 input,select,button{font:inherit;color:inherit}
 input,select{width:100%;padding:13px 14px;border:2px solid var(--line);border-radius:12px;background:var(--card);min-height:50px}
 input:focus,select:focus,button:focus-visible{outline:3px solid var(--ok);outline-offset:1px}
-label{display:block;font-size:14px;color:var(--mut);margin:10px 0 4px}
+label{display:block;font-size:.875em;color:var(--mut);margin:10px 0 4px}
 button{border:0;border-radius:12px;padding:13px 16px;min-height:50px;font-weight:700;background:var(--pri);color:var(--pritx);cursor:pointer}
 button.alt{background:var(--card);color:var(--ink);border:2px solid var(--line)}
 button.bad{background:var(--bad);color:#fff}
 .row{display:flex;gap:8px}.row>*{flex:1}.row>.fix{flex:0 0 auto}
 .search{position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5}
-.search input{font-size:22px;min-height:60px;border-color:var(--ink)}
+.search input{font-size:calc(22px*var(--fs,1));min-height:60px;border-color:var(--ink)}
 .list{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
 .item{background:var(--card);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;cursor:pointer;border:1px solid var(--line)}
-.item .nm{flex:1;min-width:0}.item .nm b{display:block;font-size:18px;overflow-wrap:anywhere}
+.item .nm{flex:1;min-width:0}.item .nm b{display:block;font-size:1.125em;overflow-wrap:anywhere}
 .item small{color:var(--mut)}
-.tag{background:var(--tag);color:var(--tagtx);border-radius:6px 14px 14px 6px;padding:8px 14px 8px 22px;font-weight:800;font-size:clamp(24px,6vw,34px);letter-spacing:-.02em;font-variant-numeric:tabular-nums;position:relative;white-space:nowrap}
+.tag{background:var(--tag);color:var(--tagtx);border-radius:6px 14px 14px 6px;padding:8px 14px 8px 22px;font-weight:800;font-size:calc(clamp(24px,6vw,34px)*var(--fs,1));letter-spacing:-.02em;font-variant-numeric:tabular-nums;position:relative;white-space:nowrap}
 .tag::before{content:"";position:absolute;left:7px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--card)}
 .tag i{font:600 13px system-ui;font-style:normal;margin-left:2px}
-.b{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;margin:4px 4px 0 0;color:#fff}
+.b{display:inline-block;font-size:.75em;font-weight:700;padding:2px 8px;border-radius:99px;margin:4px 4px 0 0;color:#fff}
 .b.r{background:var(--bad)}.b.o{background:var(--warn)}.b.g{background:var(--ok)}
 .empty{text-align:center;color:var(--mut);padding:36px 10px}
 nav{position:fixed;left:0;right:0;bottom:0;background:var(--pri);display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom));z-index:10}
@@ -42,7 +42,7 @@ nav em{position:absolute;top:2px;right:18%;background:var(--bad);font-style:norm
 .sheet{position:fixed;inset:0;background:#000a;z-index:20;display:flex;align-items:flex-end;justify-content:center}
 .sheet>div{background:var(--card);width:100%;max-width:560px;max-height:94vh;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
 @media(min-width:700px){.sheet{align-items:center}.sheet>div{border-radius:20px}}
-.hint{padding:10px 12px;border-radius:10px;font-size:15px;margin-top:10px;background:var(--bg)}
+.hint{padding:10px 12px;border-radius:10px;font-size:.9375em;margin-top:10px;background:var(--bg)}
 .hint.bad{background:#fde4e4;color:var(--bad);font-weight:700}.hint.warn{background:#fff1d6;color:var(--warn);font-weight:700}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom));background:#111;color:#fff;padding:12px 18px;border-radius:12px;z-index:50;max-width:90%}
 #toast.e{background:var(--bad)}
@@ -66,12 +66,12 @@ input[type=color]{padding:3px;height:50px}
 .hd{align-items:center;margin-bottom:6px}.hd h1{margin:0;flex:1}
 .tools{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
 .tool{background:var(--card);color:var(--ink);border:1px solid var(--line);text-align:left;padding:18px;display:flex;flex-direction:column;gap:4px;min-height:110px}
-.tool span{font-size:32px}.tool b{font-size:18px}.tool small{color:var(--mut);font-weight:400;font-size:14px}
+.tool span{font-size:32px}.tool b{font-size:1.125em}.tool small{color:var(--mut);font-weight:400;font-size:14px}
 .ord{gap:10px}.ord.dn b{text-decoration:line-through;opacity:.55}.ord input[type=checkbox]{width:28px;min-height:28px;height:28px;flex:0 0 auto}
 .qty{max-width:110px}
-.total{display:flex;justify-content:space-between;align-items:center;background:var(--tag);color:var(--tagtx);border-radius:14px;padding:14px 18px;margin:12px 0;font-size:20px}
-.total b{font-size:clamp(30px,8vw,44px);font-variant-numeric:tabular-nums}
-.chg{flex:1;display:flex;align-items:center;font-weight:800;font-size:18px}
+.total{display:flex;justify-content:space-between;align-items:center;background:var(--tag);color:var(--tagtx);border-radius:14px;padding:14px 18px;margin:12px 0;font-size:1.25em}
+.total b{font-size:calc(clamp(30px,8vw,44px)*var(--fs,1));font-variant-numeric:tabular-nums}
+.chg{flex:1;display:flex;align-items:center;font-weight:800;font-size:1.125em}
 .kres{width:100%;margin-top:6px;text-align:left}
 .krow{gap:6px;margin-top:8px}.krow button{min-width:44px;padding:8px}.krow .kq{width:64px;text-align:center;padding:8px}.krow .kl{min-width:84px;text-align:right}
 body.kb nav{display:none}
@@ -82,6 +82,7 @@ body.kb .search{padding:4px 0}body.kb .search input{min-height:50px}
 .cbar .total{margin:0 0 6px;padding:8px 14px}.cbar input{min-height:46px;padding:8px 12px}
 body.kb .cbar .total{font-size:16px}
 .lbtn{display:flex;align-items:center;justify-content:center;border:2px solid var(--line);border-radius:12px;min-height:50px;font-weight:700;background:var(--card);color:var(--ink);cursor:pointer}
+.pre{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.pre button{min-height:40px;padding:6px 14px;font-size:14px;border-radius:99px;color:#fff}
 #zoomb{padding:0 16px}#zoomb input{padding:0;border:0;min-height:36px;background:transparent}
 </style>
 </head>
@@ -92,7 +93,7 @@ body.kb .cbar .total{font-size:16px}
 <div id="setup" class="wrap" hidden>
   <h1>Bağlantı kurulumu</h1>
   <div class="box">
-    <p>1) Supabase'de SQL Editor'ü açıp aşağıdaki kodu çalıştırın. 2) Authentication &gt; Users'tan kendinize e-posta/şifre ile kullanıcı ekleyin (kayıt olmayı kapatın). 3) Project Settings &gt; API'den adresi ve anon anahtarı girin.</p>
+    <p>1) Supabase'de SQL Editor'ü açıp aşağıdaki kodu çalıştırın. 2) Authentication &gt; Users'tan kendinize e-posta/şifre ile kullanıcı ekleyin (kayıt olmayı kapatın). 3) Project Settings &gt; API'den adresi ve anon anahtarı girin. (Her cihazda girmemek için bunları kodun başındaki SUPABASE_URL ve SUPABASE_KEY alanlarına yazın.)</p>
     <button class="alt" id="cpsql">SQL kodunu kopyala</button>
     <label>Supabase adresi</label><input id="s_url" placeholder="https://xxxx.supabase.co" autocapitalize="off">
     <label>Anon (public) anahtar</label><input id="s_key" autocapitalize="off">
@@ -161,13 +162,20 @@ body.kb .cbar .total{font-size:16px}
       <label class="sw"><input type="checkbox" id="md_cart"> Hesap makinesi / sepet</label>
     </div>
     <div id="t_look" class="box" hidden>
+      <div class="item" style="cursor:default;margin:0 0 6px"><div class="nm"><b>Örnek ürün</b><small>Stok: 12 adet · Gıda</small></div><div class="tag">₺12,50<i>/adet</i></div></div>
       <label>Tema</label><select id="st_th"><option value="auto">Otomatik (cihaza göre)</option><option value="light">Açık</option><option value="dark">Koyu</option></select>
+      <label>Yazı tipi</label><select id="st_fo"><option value="sys">Varsayılan</option><option value="read">Okunaklı (Verdana)</option><option value="arial">Arial</option><option value="round">Yuvarlak (Trebuchet)</option><option value="serif">Klasik (Georgia)</option><option value="mono">Daktilo</option></select>
+      <label>Yazı boyutu</label><select id="st_fs"><option value="0.9">Küçük</option><option value="1">Normal</option><option value="1.15">Büyük</option><option value="1.3">Çok büyük</option></select>
+      <label>Hazır renkler</label>
+      <div class="pre" id="presets"><button data-pre="green" style="background:#14231c">Yeşil</button><button data-pre="blue" style="background:#16324f">Mavi</button><button data-pre="red" style="background:#4a1616">Kırmızı</button><button data-pre="purple" style="background:#2b1b4a">Mor</button><button data-pre="orange" style="background:#4a2a0a">Turuncu</button></div>
       <div class="row"><div><label>Ana renk</label><input type="color" id="c_pri"></div><div><label>Fiyat etiketi</label><input type="color" id="c_tag"></div><div><label>Vurgu</label><input type="color" id="c_ok"></div></div>
-      <p><button class="alt" id="c_reset" style="width:100%">Renkleri varsayılana döndür</button></p>
+      <div class="row"><div><label>Yazı rengi</label><input type="color" id="c_ink"></div><div><label>Fiyat yazısı</label><input type="color" id="c_tt"></div></div>
+      <p><button class="alt" id="c_reset" style="width:100%">Görünümü varsayılana döndür</button></p>
     </div>
     <div id="t_acc" class="box" hidden>
-      <p id="who"></p>
+      <p id="who"></p><p id="syncnote" style="color:var(--mut);font-size:14px"></p>
       <div class="row"><button class="alt" id="csv">Yedek indir (CSV)</button><button class="alt" id="reload">Yenile</button></div>
+      <p><button class="alt" id="cpsql2" style="width:100%">Ayar tablosu SQL kodunu kopyala</button></p>
       <p><button class="alt" id="rest" style="width:100%">Yedekten yükle (CSV)</button><input type="file" id="restf" accept=".csv,text/csv,text/plain" hidden></p>
       <p><button class="bad" id="out" style="width:100%">Çıkış yap</button></p>
       <p><button class="alt" id="reset" style="width:100%">Bağlantıyı sıfırla</button></p>
@@ -204,7 +212,10 @@ body.kb .cbar .total{font-size:16px}
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
-const SQL=`create table products(
+/* ===== Supabase bağlantısı: buraya bir kez yazın, bir daha sorulmaz ===== */
+const SUPABASE_URL='';   // örn: https://abcdxyz.supabase.co
+const SUPABASE_KEY='';   // Project Settings > API > anon public anahtarı
+const SQLBASE=`create table products(
  id uuid primary key default gen_random_uuid(),
  barcode text unique,
  category text,
@@ -236,6 +247,13 @@ create table order_items(id uuid primary key default gen_random_uuid(),
  done boolean not null default false, created_at timestamptz not null default now());
 alter table order_items enable row level security;
 create policy o_all on order_items for all to authenticated using(true) with check(true);`;
+const SQL_SET=`create table if not exists app_settings(id int primary key default 1 check (id=1),
+ data jsonb not null default '{}'::jsonb, updated_at timestamptz not null default now());
+alter table app_settings enable row level security;
+create policy s_all on app_settings for all to authenticated using(true) with check(true);
+insert into app_settings(id,data) values(1,'{}'::jsonb) on conflict do nothing;
+alter publication supabase_realtime add table app_settings;`;
+const SQL=SQLBASE+'\n'+SQL_SET;
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -244,8 +262,13 @@ const TL=n=>new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY'}).for
 const r2=n=>Math.round((+n+Number.EPSILON)*100)/100;
 const num=v=>{const n=parseFloat(String(v).trim().replace(',','.'));return isNaN(n)?null:n};
 const ls=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
-const S=Object.assign({t:25,m:100,b:30,d:30,om:true,os:true,od:true,th:"auto",c:{},sk:14,mod:{skt:true,ord:true,cart:true}},ls('bk_set',{}));
-S.mod=Object.assign({skt:true,ord:true,cart:true},S.mod||{});S.c=S.c||{};
+const defS=()=>({t:25,m:100,b:30,d:30,om:true,os:true,od:true,th:'auto',c:{},sk:14,mod:{skt:true,ord:true,cart:true},fo:'sys',fs:1});
+const S=defS();
+function applyS(o){o=o||{};Object.assign(S,defS(),o);S.mod=Object.assign(defS().mod,o.mod||{});S.c=Object.assign({},o.c||{});S.fs=+S.fs||1}
+const getS=()=>({t:S.t,m:S.m,b:S.b,d:S.d,om:S.om,os:S.os,od:S.od,th:S.th,c:S.c,sk:S.sk,mod:S.mod,fo:S.fo,fs:S.fs});
+applyS(ls('bk_set',{}));
+const FONTS={read:'Verdana,Tahoma,sans-serif',arial:'Arial,Helvetica,sans-serif',round:'"Trebuchet MS","Segoe UI",sans-serif',serif:'Georgia,"Times New Roman",serif',mono:'ui-monospace,Consolas,monospace'};
+const hex6=v=>/^#[0-9a-f]{3}$/i.test(v)?'#'+[...v.slice(1)].map(c=>c+c).join(''):v;
 let sb,P=[],cur=null,tmr;
 
 function toast(m,e){const t=$('#toast');t.textContent=m;t.className=e?'e':'';t.hidden=false;clearTimeout(tmr);tmr=setTimeout(()=>t.hidden=true,e?5000:2200)}
@@ -262,7 +285,9 @@ const issues=p=>{const a=[];
 /* ---- Başlangıç ---- */
 async function init(){
  $('#cpsql').onclick=async()=>{try{await navigator.clipboard.writeText(SQL);toast('Kopyalandı')}catch{prompt('Kopyalayın:',SQL)}};
- const cfg=ls('bk_cfg',null);
+ $('#cpsql2').onclick=async()=>{try{await navigator.clipboard.writeText(SQL_SET);toast('Kopyalandı')}catch{prompt('Kopyalayın:',SQL_SET)}};
+ $('#reset').hidden=!!SUPABASE_URL;
+ const cfg=SUPABASE_URL&&SUPABASE_KEY?{url:SUPABASE_URL,key:SUPABASE_KEY}:ls('bk_cfg',null);
  if(!cfg){show('setup');return}
  if(!window.supabase){loadCache();show('app');$('#off').hidden=false;route();return}
  sb=supabase.createClient(cfg.url,cfg.key);
@@ -279,8 +304,9 @@ async function warmScanner(){
 async function start(session){
  $('#who').textContent='Giriş: '+(session.user.email||'');
  show('app');route();
- await load();
- sb.channel('p').on('postgres_changes',{event:'*',schema:'public',table:'products'},()=>{clearTimeout(window._rt);window._rt=setTimeout(load,800)}).subscribe();
+ await Promise.all([loadSet(),load()]);
+ sb.channel('p').on('postgres_changes',{event:'*',schema:'public',table:'products'},()=>{clearTimeout(window._rt);window._rt=setTimeout(load,800)})
+  .on('postgres_changes',{event:'*',schema:'public',table:'app_settings'},()=>{clearTimeout(window._st);window._st=setTimeout(pullSet,800)}).subscribe();
  $('#q').focus();
 }
 function loadCache(){P=ls('bk_cache',[])}
@@ -334,8 +360,9 @@ function renderAlerts(){
 function fillSet(){
  $('#st_om').checked=S.om;$('#st_os').checked=S.os;$('#st_od').checked=S.od;
  $('#st_t').value=S.t;$('#st_m').value=S.m;$('#st_b').value=S.b;$('#st_d').value=S.d;$('#st_th').value=S.th;$('#md_skt').checked=S.mod.skt;$('#md_ord').checked=S.mod.ord;$('#md_cart').checked=S.mod.cart;$('#md_sk').value=S.sk;
+ $('#st_fo').value=S.fo;$('#st_fs').value=String(S.fs);
  const cs=getComputedStyle(document.documentElement);
- [['pri','--pri'],['tag','--tag'],['ok','--ok']].forEach(([k,v])=>$('#c_'+k).value=S.c[k]||cs.getPropertyValue(v).trim());
+ [['pri','--pri'],['tag','--tag'],['ok','--ok'],['ink','--ink'],['tt','--tagtx']].forEach(([k,v])=>$('#c_'+k).value=hex6(S.c[k]||cs.getPropertyValue(v).trim()));
 }
 
 /* ---- Ürün formu ---- */
@@ -546,22 +573,57 @@ $('#csv').onclick=()=>{const h=['barkod','kategori','ad','birim','alis','satis',
  const c=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
  const t=[h.join(',')].concat(P.map(p=>[p.barcode,p.category,p.name,p.unit,p.cost_price,p.sell_price,p.stock,p.min_stock,p.expiry].map(c).join(','))).join('\n');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+t],{type:'text/csv'}));a.download='urunler-'+new Date().toISOString().slice(0,10)+'.csv';a.click()};
-const persist=()=>localStorage.setItem('bk_set',JSON.stringify(S));
+let synced=false,lastJson='',setT,lastLocal=0;
+function persist(){
+ localStorage.setItem('bk_set',JSON.stringify(getS()));lastLocal=Date.now();
+ clearTimeout(setT);setT=setTimeout(pushSet,600)}
+function syncNote(ok){const n=$('#syncnote');if(n)n.textContent=ok?'Ayarlar tüm cihazlarda ortak (Supabase).':'Ayarlar yalnızca bu cihazda. Ortak olması için “Ayar tablosu SQL kodunu” Supabase’de çalıştırın.'}
+async function pushSet(){
+ if(!sb||!synced)return;
+ const j=JSON.stringify(getS());if(j===lastJson)return;
+ const {error}=await sb.from('app_settings').upsert({id:1,data:getS(),updated_at:new Date().toISOString()});
+ if(error)toast('Ayarlar sunucuya kaydedilemedi',1);else lastJson=j;
+}
+async function loadSet(){
+ try{
+  const {data,error}=await sb.from('app_settings').select('data').eq('id',1).maybeSingle();
+  if(error)throw error;
+  synced=true;syncNote(true);
+  if(data&&data.data&&Object.keys(data.data).length){applyS(data.data);lastJson=JSON.stringify(getS());localStorage.setItem('bk_set',lastJson);applyTheme();route()}
+  else{lastJson='';await pushSet()}
+ }catch(e){synced=false;syncNote(false)}
+}
+async function pullSet(){
+ if(!synced||Date.now()-lastLocal<3000)return;
+ try{
+  const {data,error}=await sb.from('app_settings').select('data').eq('id',1).maybeSingle();
+  if(error||!data||!data.data)return;
+  const old=JSON.stringify(getS());applyS(data.data);
+  if(JSON.stringify(getS())!==old){lastJson=JSON.stringify(getS());localStorage.setItem('bk_set',lastJson);applyTheme();route()}
+ }catch{}
+}
 const lum=h=>{const n=parseInt(h.slice(1),16);return .299*(n>>16)+.587*(n>>8&255)+.114*(n&255)};
 function applyTheme(){
  const d=document.documentElement,dk=matchMedia('(prefers-color-scheme:dark)').matches;
  d.dataset.theme=S.th==='auto'?(dk?'dark':'light'):S.th;
- [['pri','--pri','--pritx'],['tag','--tag','--tagtx'],['ok','--ok','']].forEach(([k,v,tx])=>{const c=S.c[k];
-  if(c){d.style.setProperty(v,c);if(tx)d.style.setProperty(tx,lum(c)>150?'#111':'#fff')}
-  else{d.style.removeProperty(v);if(tx)d.style.removeProperty(tx)}});
+ const sp=(v,x)=>x?d.style.setProperty(v,x):d.style.removeProperty(v);
+ const con=c=>lum(c)>150?'#111':'#fff';
+ sp('--pri',S.c.pri);sp('--pritx',S.c.pri&&con(S.c.pri));
+ sp('--tag',S.c.tag);sp('--tagtx',S.c.tt||(S.c.tag&&con(S.c.tag)));
+ sp('--ok',S.c.ok);sp('--ink',S.c.ink);
+ sp('--font',S.fo!=='sys'&&FONTS[S.fo]);sp('--fs',S.fs!==1&&String(S.fs));
 }
 document.addEventListener('click',e=>{const c=e.target.closest('.chip');if(c){F=c.dataset.c;renderSearch()}});
 document.querySelectorAll('.tabs [data-t]').forEach(b=>b.onclick=()=>{
  document.querySelectorAll('.tabs [data-t]').forEach(x=>x.classList.toggle('on',x===b));
  ['rules','mod','look','acc'].forEach(t=>$('#t_'+t).hidden=t!==b.dataset.t)});
 $('#st_th').onchange=e=>{S.th=e.target.value;persist();applyTheme()};
-['pri','tag','ok'].forEach(k=>$('#c_'+k).oninput=e=>{S.c[k]=e.target.value;persist();applyTheme()});
-$('#c_reset').onclick=()=>{S.c={};persist();applyTheme();fillSet()};
+$('#st_fo').onchange=e=>{S.fo=e.target.value;persist();applyTheme()};
+$('#st_fs').onchange=e=>{S.fs=+e.target.value||1;persist();applyTheme()};
+['pri','tag','ok','ink','tt'].forEach(k=>$('#c_'+k).oninput=e=>{S.c[k]=e.target.value;persist();applyTheme()});
+const PRE={green:{},blue:{pri:'#16324f',ok:'#1d6fb8'},red:{pri:'#4a1616',ok:'#c62f2f'},purple:{pri:'#2b1b4a',ok:'#6d3fc0'},orange:{pri:'#4a2a0a',ok:'#c25b00'}};
+$('#presets').onclick=e=>{const b=e.target.closest('[data-pre]');if(!b)return;['pri','tag','ok'].forEach(k=>delete S.c[k]);Object.assign(S.c,PRE[b.dataset.pre]);persist();applyTheme();fillSet()};
+$('#c_reset').onclick=()=>{S.c={};S.fo='sys';S.fs=1;persist();applyTheme();fillSet()};
 matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{if(S.th==='auto')applyTheme()});
 function parseCSV(t){
  t=t.replace(/^\ufeff/,'');const h=t.split(/\r?\n/)[0];
