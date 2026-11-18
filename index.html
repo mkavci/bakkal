@@ -81,6 +81,8 @@ body.kb .search{padding:4px 0}body.kb .search input{min-height:50px}
 .cbar{position:sticky;top:0;z-index:6;background:var(--bg);padding:6px 0}
 .cbar .total{margin:0 0 6px;padding:8px 14px}.cbar input{min-height:46px;padding:8px 12px}
 body.kb .cbar .total{font-size:16px}
+.lbtn{display:flex;align-items:center;justify-content:center;border:2px solid var(--line);border-radius:12px;min-height:50px;font-weight:700;background:var(--card);color:var(--ink);cursor:pointer}
+#zoomb{padding:0 16px}#zoomb input{padding:0;border:0;min-height:36px;background:transparent}
 </style>
 </head>
 <body>
@@ -197,7 +199,7 @@ body.kb .cbar .total{font-size:16px}
   <p><button class="bad" id="f_del" style="width:100%">Ürünü sil</button></p>
 </div></div>
 
-<div id="scan" hidden><video id="cam" playsinline muted></video><div id="reader" hidden style="flex:1;min-height:0;overflow:hidden"></div><p>Barkodu çerçeveye getirin</p><button class="alt" id="scanx" style="margin:0 12px 12px">Kapat</button></div>
+<div id="scan" hidden><video id="cam" playsinline muted></video><div id="reader" hidden style="flex:1;min-height:0;overflow:hidden"></div><div id="zoomb" hidden><input type="range" id="zoom" aria-label="Yakınlaştır"></div><p>Barkodu çerçeveye getirin. Bulanıksa telefonu biraz uzaklaştırıp yakınlaştırma çubuğunu kullanın.</p><div class="row" style="margin:0 12px 12px"><label class="lbtn" for="phf">📸 Fotoğraf çek</label><input type="file" id="phf" accept="image/*" capture="environment" hidden><button class="alt" id="scanx">Kapat</button></div><div id="rd2" hidden></div></div>
 <div id="toast" hidden></div>
 
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -384,29 +386,65 @@ async function del(){
 }
 
 /* ---- Barkod tarama ---- */
+let scanCb=null,scanStop=null;
 async function scan(cb){
+ scanCb=cb;
  if('BarcodeDetector' in window){$('#cam').hidden=false;$('#reader').hidden=true;return scanNative(cb)}
  return scanLib(cb);
 }
+const eanOk=c=>{if(!/^(\d{8}|\d{13})$/.test(c))return true;const d=[...c].map(Number),k=d.pop();let t=0;d.reverse().forEach((n,i)=>t+=n*(i%2?1:3));return (10-t%10)%10===k};
+function camTune(track){
+ const zb=$('#zoomb'),z=$('#zoom');zb.hidden=true;if(!track||!track.getCapabilities)return;
+ let cap={};try{cap=track.getCapabilities()}catch{}
+ const cons={};const ap=o=>{Object.assign(cons,o);return track.applyConstraints({advanced:[cons]}).catch(()=>{})};
+ if(cap.focusMode&&cap.focusMode.includes('continuous'))ap({focusMode:'continuous'});
+ if(cap.zoom){z.min=cap.zoom.min;z.max=Math.min(cap.zoom.max,8);z.step=cap.zoom.step||.1;
+  const v0=Math.min(Math.max(cap.zoom.min*2,2),+z.max);z.value=v0;zb.hidden=false;ap({zoom:v0});
+  z.oninput=()=>{ap({zoom:+z.value})}}
+}
+async function decodeFile(file){
+ const bmp=await createImageBitmap(file),sc=Math.min(1,1800/Math.max(bmp.width,bmp.height));
+ const w=Math.round(bmp.width*sc),h=Math.round(bmp.height*sc);
+ for(const rot of [0,90,270]){
+  const c=document.createElement('canvas');c.width=rot?h:w;c.height=rot?w:h;
+  const x=c.getContext('2d');x.translate(c.width/2,c.height/2);x.rotate(rot*Math.PI/180);x.drawImage(bmp,-w/2,-h/2,w,h);
+  try{
+   let t=null;
+   if('BarcodeDetector' in window){const r=await new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128']}).detect(c);t=r[0]&&r[0].rawValue}
+   else if(window.Html5Qrcode){const F=Html5QrcodeSupportedFormats,b=await new Promise(r=>c.toBlob(r,'image/jpeg',.95));
+    const q=new Html5Qrcode('rd2',{verbose:false,formatsToSupport:[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.CODE_128]});
+    t=await q.scanFile(new File([b],'a.jpg',{type:'image/jpeg'}),false);try{q.clear()}catch{}}
+   if(t&&eanOk(t))return t;
+  }catch{}
+ }
+ return null;
+}
+$('#phf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;toast('Okunuyor...');
+ let code=null;try{code=await decodeFile(f)}catch{}
+ if(!code)return toast('Barkod okunamadı. Barkodu net ve ekranı dolduracak şekilde çekip tekrar deneyin ya da elle yazın.',1);
+ const cb=scanCb;if(scanStop)scanStop();if(cb)cb(code)};
 async function scanLib(cb){
  if(!window.Html5Qrcode)return toast('Barkod okuyucu yüklenemedi. İnternet bağlantısını kontrol edin veya barkodu yazın.',1);
- const ov=$('#scan');$('#cam').hidden=true;$('#reader').hidden=false;ov.hidden=false;
+ const ov=$('#scan');$('#cam').hidden=true;$('#reader').hidden=false;$('#zoomb').hidden=true;ov.hidden=false;
  const F=Html5QrcodeSupportedFormats;
  const h=new Html5Qrcode('reader',{verbose:false,formatsToSupport:[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.CODE_128],experimentalFeatures:{useBarCodeDetectorIfSupported:true}});
  let done=false;
  const stop=async()=>{if(done)return;done=true;try{await h.stop()}catch{}try{h.clear()}catch{}ov.hidden=true;$('#reader').hidden=true};
- $('#scanx').onclick=stop;
- try{await h.start({facingMode:'environment'},{fps:10,qrbox:(w,hh)=>({width:Math.max(150,w-30),height:Math.max(100,Math.min(180,hh-30))})},t=>{if(done)return;navigator.vibrate&&navigator.vibrate(60);stop();cb(t)},()=>{})}
- catch(e){await stop();toast('Kamera açılamadı. Kamera iznini verin (sayfa https olmalı) veya barkodu yazın.',1)}
+ scanStop=stop;$('#scanx').onclick=stop;
+ try{
+  await h.start({facingMode:'environment'},{fps:10,videoConstraints:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}},qrbox:(w,hh)=>({width:Math.max(150,w-30),height:Math.max(100,Math.min(180,hh-30))})},
+   t=>{if(done||!eanOk(t))return;navigator.vibrate&&navigator.vibrate(60);stop();cb(t)},()=>{});
+  const vid=document.querySelector('#reader video');camTune(vid&&vid.srcObject&&vid.srcObject.getVideoTracks()[0]);
+ }catch(e){await stop();toast('Kamera açılamadı. Kamera iznini verin (sayfa https olmalı) veya barkodu yazın.',1)}
 }
 async function scanNative(cb){
  let stream;
- try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})}catch{return toast('Kamera izni verilmedi (sayfa https olmalı)',1)}
- const v=$('#cam');v.srcObject=stream;$('#scan').hidden=false;await v.play();
+ try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}})}catch{return toast('Kamera izni verilmedi (sayfa https olmalı)',1)}
+ const v=$('#cam');v.srcObject=stream;$('#scan').hidden=false;await v.play();camTune(stream.getVideoTracks()[0]);
  const det=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128']});let on=true;
- const stop=()=>{on=false;stream.getTracks().forEach(t=>t.stop());$('#scan').hidden=true};
+ const stop=()=>{on=false;stream.getTracks().forEach(t=>t.stop());$('#scan').hidden=true};scanStop=stop;
  $('#scanx').onclick=stop;
- (async function loop(){if(!on)return;try{const b=await det.detect(v);if(b[0]){navigator.vibrate?.(60);stop();cb(b[0].rawValue);return}}catch{}setTimeout(loop,180)})();
+ (async function loop(){if(!on)return;try{const b=await det.detect(v);if(b[0]&&eanOk(b[0].rawValue)){navigator.vibrate?.(60);stop();cb(b[0].rawValue);return}}catch{}setTimeout(loop,180)})();
 }
 
 /* ---- Olaylar ---- */
