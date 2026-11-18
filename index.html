@@ -83,7 +83,9 @@ body.kb .search{padding:4px 0}body.kb .search input{min-height:50px}
 body.kb .cbar .total{font-size:16px}
 .lbtn{display:flex;align-items:center;justify-content:center;border:2px solid var(--line);border-radius:12px;min-height:50px;font-weight:700;background:var(--card);color:var(--ink);cursor:pointer}
 .pre{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.pre button{min-height:40px;padding:6px 14px;font-size:14px;border-radius:99px;color:#fff}
-#zoomb{padding:0 16px}#zoomb input{padding:0;border:0;min-height:36px;background:transparent}
+#zoomb{padding:0 16px;display:flex;align-items:center;gap:10px;color:#fff;font-size:14px}#zoomb input{flex:1;min-width:0;padding:0;border:0;min-height:36px;background:transparent}#zoomb button{flex:0 0 auto;min-height:36px;padding:4px 10px;font-size:13px}#zval{min-width:44px;font-weight:700}
+.inp{position:relative}.inp input{padding-right:46px}.x{position:absolute;right:6px;top:50%;transform:translateY(-50%);min-height:36px;width:36px;padding:0;border-radius:99px;background:var(--line);color:var(--ink);font-size:16px}
+input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display:none}
 </style>
 </head>
 <body>
@@ -115,7 +117,7 @@ body.kb .cbar .total{font-size:16px}
 <div id="app" class="wrap" hidden>
   <section id="v_search">
     <div class="search"><div class="row">
-      <input id="q" type="search" inputmode="search" enterkeyhint="search" placeholder="Ürün adı veya barkod" autocomplete="off">
+      <div class="inp"><input id="q" type="search" inputmode="search" enterkeyhint="search" placeholder="Ürün adı veya barkod" autocomplete="off"><button class="x" id="qx" aria-label="Temizle" hidden>✕</button></div>
       <button class="fix" id="qscan" aria-label="Barkod tara">📷</button>
     </div></div>
     <div id="chips" class="chips"></div><div id="res" class="list"></div>
@@ -137,7 +139,7 @@ body.kb .cbar .total{font-size:16px}
   <section id="v_cart" hidden>
     <div class="row hd"><button class="alt fix" data-go="tools">‹ Geri</button><h1>Hesap makinesi</h1></div>
     <div class="cbar"><div class="total"><span>Toplam</span><b id="k_tot"></b></div><div class="row"><input id="k_pay" inputmode="decimal" placeholder="Verilen para (₺)"><div class="chg" id="k_chg"></div></div></div>
-    <div class="row"><input id="k_q" placeholder="Ürün adı veya barkod" autocomplete="off"><button class="alt fix" id="k_scan" aria-label="Barkod tara">📷</button></div>
+    <div class="row"><div class="inp"><input id="k_q" placeholder="Ürün adı veya barkod" autocomplete="off"><button class="x" id="kx" aria-label="Temizle" hidden>✕</button></div><button class="alt fix" id="k_scan" aria-label="Barkod tara">📷</button></div>
     <div id="k_res"></div><div id="k_ls"></div>
     <div class="row" style="margin-top:8px"><input id="k_man" inputmode="decimal" placeholder="Başka tutar ekle (₺)"><button class="alt fix" id="k_madd">Ekle</button></div>
     <p><button class="bad" id="k_clr" style="width:100%">Sepeti boşalt</button></p>
@@ -160,6 +162,8 @@ body.kb .cbar .total{font-size:16px}
       <label>Kaç gün kala uyarsın</label><input id="md_sk" inputmode="numeric">
       <label class="sw"><input type="checkbox" id="md_ord"> Sipariş listesi</label>
       <label class="sw"><input type="checkbox" id="md_cart"> Hesap makinesi / sepet</label>
+      <label>Barkod kamerası açılış yakınlaştırması (x) · bu cihaza özel</label><input id="md_zm" inputmode="decimal" placeholder="1">
+      <p style="color:var(--mut);font-size:14px;margin:6px 0 0">Tarama ekranındaki çubukla deneyip “Varsayılan yap” ile de kaydedebilirsiniz. iPhone Safari yakınlaştırmayı desteklemez.</p>
     </div>
     <div id="t_look" class="box" hidden>
       <div class="item" style="cursor:default;margin:0 0 6px"><div class="nm"><b>Örnek ürün</b><small>Stok: 12 adet · Gıda</small></div><div class="tag">₺12,50<i>/adet</i></div></div>
@@ -205,7 +209,7 @@ body.kb .cbar .total{font-size:16px}
   <p><button class="bad" id="f_del" style="width:100%">Ürünü sil</button></p>
 </div></div>
 
-<div id="scan" hidden><video id="cam" playsinline muted></video><div id="reader" hidden style="flex:1;min-height:0;overflow:hidden"></div><div id="zoomb" hidden><input type="range" id="zoom" aria-label="Yakınlaştır"></div><p id="scanmsg">Barkodu çerçeveye getirin. Bulanıksa telefonu biraz uzaklaştırıp yakınlaştırma çubuğunu kullanın.</p><div class="row" style="margin:0 12px 12px"><label class="lbtn" for="phf">📸 Fotoğraf çek</label><input type="file" id="phf" accept="image/*" capture="environment" hidden><button class="alt" id="scanx">Kapat</button></div><div id="rd2" hidden></div></div>
+<div id="scan" hidden><video id="cam" playsinline muted></video><div id="reader" hidden style="flex:1;min-height:0;overflow:hidden"></div><div id="zoomb" hidden><span id="zval"></span><input type="range" id="zoom" aria-label="Yakınlaştır"><button class="alt" id="zsave">Varsayılan yap</button></div><p id="scanmsg">Barkodu çerçeveye getirin. Bulanıksa telefonu biraz uzaklaştırıp yakınlaştırma çubuğunu kullanın.</p><div class="row" style="margin:0 12px 12px"><label class="lbtn" for="phf">📸 Fotoğraf çek</label><input type="file" id="phf" accept="image/*" capture="environment" hidden><button class="alt" id="scanx">Kapat</button></div><div id="rd2" hidden></div></div>
 <div id="toast" hidden></div>
 
 <script async src="https://cdn.jsdelivr.net/npm/@undecaf/zbar-wasm@0.11.0/dist/inlined/index.js"></script>
@@ -270,6 +274,8 @@ applyS(ls('bk_set',{}));
 const FONTS={read:'Verdana,Tahoma,sans-serif',arial:'Arial,Helvetica,sans-serif',round:'"Trebuchet MS","Segoe UI",sans-serif',serif:'Georgia,"Times New Roman",serif',mono:'ui-monospace,Consolas,monospace'};
 const hex6=v=>/^#[0-9a-f]{3}$/i.test(v)?'#'+[...v.slice(1)].map(c=>c+c).join(''):v;
 let sb,P=[],cur=null,tmr;
+let ZM=+ls('bk_zm',1)||1;
+function setZM(v){ZM=r2(v);try{localStorage.setItem('bk_zm',ZM)}catch{}}
 
 function toast(m,e){const t=$('#toast');t.textContent=m;t.className=e?'e':'';t.hidden=false;clearTimeout(tmr);tmr=setTimeout(()=>t.hidden=true,e?5000:2200)}
 function show(id){['setup','login','app'].forEach(x=>$('#'+x).hidden=x!==id);$('#nav').hidden=id!=='app'}
@@ -339,6 +345,7 @@ function card(p){
  return `<div class="item" data-id="${esc(p.id)}"><div class="nm"><b>${esc(p.name)}</b><small>${esc([p.stock==null?'':'Stok: '+(+p.stock)+' '+p.unit,S.mod.skt&&p.expiry?'SKT '+p.expiry.split('-').reverse().join('.'):'',p.category,p.barcode].filter(Boolean).join(' · '))}</small><div>${b}</div></div><div class="tag">${TL(p.sell_price)}<i>/${esc(p.unit)}</i></div></div>`}
 let F='';
 function renderSearch(){
+ $('#qx').hidden=!$('#q').value;
  const cats=[...new Set(P.map(p=>p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
  if(F&&!cats.includes(F))F='';
  $('#chips').innerHTML=cats.length?['',...cats].map(c=>`<button class="alt chip${c===F?' on':''}" data-c="${esc(c)}">${esc(c||'Tümü')}</button>`).join(''):'';
@@ -359,7 +366,7 @@ function renderAlerts(){
 }
 function fillSet(){
  $('#st_om').checked=S.om;$('#st_os').checked=S.os;$('#st_od').checked=S.od;
- $('#st_t').value=S.t;$('#st_m').value=S.m;$('#st_b').value=S.b;$('#st_d').value=S.d;$('#st_th').value=S.th;$('#md_skt').checked=S.mod.skt;$('#md_ord').checked=S.mod.ord;$('#md_cart').checked=S.mod.cart;$('#md_sk').value=S.sk;
+ $('#st_t').value=S.t;$('#st_m').value=S.m;$('#st_b').value=S.b;$('#st_d').value=S.d;$('#st_th').value=S.th;$('#md_skt').checked=S.mod.skt;$('#md_ord').checked=S.mod.ord;$('#md_cart').checked=S.mod.cart;$('#md_sk').value=S.sk;$('#md_zm').value=ZM;
  $('#st_fo').value=S.fo;$('#st_fs').value=String(S.fs);
  const cs=getComputedStyle(document.documentElement);
  [['pri','--pri'],['tag','--tag'],['ok','--ok'],['ink','--ink'],['tt','--tagtx']].forEach(([k,v])=>$('#c_'+k).value=hex6(S.c[k]||cs.getPropertyValue(v).trim()));
@@ -422,7 +429,9 @@ async function del(){
 /* ---- Barkod tarama ---- */
 let scanCb=null,scanStop=null,scanBusy=false;
 const zb=()=>window.zbarWasm&&typeof window.zbarWasm.scanImageData==='function'?window.zbarWasm:null;
-const eanOk=c=>{if(!/^(\d{8}|\d{13})$/.test(c))return true;const d=[...c].map(Number),k=d.pop();let t=0;d.reverse().forEach((n,i)=>t+=n*(i%2?1:3));return (10-t%10)%10===k};
+const isStd=c=>/^(\d{8}|\d{12,14})$/.test(c);
+const gs1=c=>{const d=[...c].map(Number),k=d.pop();let t=0;d.reverse().forEach((n,i)=>t+=n*(i%2?1:3));return (10-t%10)%10===k};
+const eanOk=c=>isStd(c)?gs1(c):true;
 
 let AC;
 function beep(){try{AC=AC||new AudioContext();if(AC.state==='suspended')AC.resume();const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=1100;g.gain.value=.15;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+.08)}catch{}}
@@ -445,8 +454,9 @@ function camTune(track){
  const cons={};const ap=o=>{Object.assign(cons,o);return track.applyConstraints({advanced:[cons]}).catch(()=>{})};
  if(cap.focusMode&&cap.focusMode.includes('continuous'))ap({focusMode:'continuous'});
  if(cap.zoom){z.min=cap.zoom.min;z.max=Math.min(cap.zoom.max,8);z.step=cap.zoom.step||.1;
-  const v0=+cap.zoom.min;z.value=v0;zbx.hidden=false;ap({zoom:v0});
-  z.oninput=()=>{ap({zoom:+z.value})}}
+  const v0=Math.min(Math.max(ZM,+cap.zoom.min),+z.max);z.value=v0;zbx.hidden=false;ap({zoom:v0});
+  const sh=()=>{$('#zval').textContent='x'+(+z.value).toFixed(1)};sh();
+  z.oninput=()=>{ap({zoom:+z.value});sh()}}
 }
 async function decodeFile(file){
  const bmp=await createImageBitmap(file),sc=Math.min(1,1800/Math.max(bmp.width,bmp.height));
@@ -495,7 +505,7 @@ async function scanCam(cb,multi,mode){
  const v=$('#cam');v.srcObject=stream;$('#scan').hidden=false;
  try{await v.play()}catch{}
  camTune(stream.getVideoTracks()[0]);
- let on=true,last='',lt=0,errs=0;
+ let on=true,last='',lastSeen=0,cand='',cnt=0,miss=0,errs=0;
  const stop=()=>{if(!on)return;on=false;stream.getTracks().forEach(t=>t.stop());v.srcObject=null;$('#scan').hidden=true};
  scanStop=stop;$('#scanx').onclick=stop;
  const det=mode==='native'?new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128']}):null;
@@ -514,11 +524,16 @@ async function scanCam(cb,multi,mode){
   try{
    if(v.videoWidth){
     const code=await read();errs=0;
-    if(on&&code&&!(code===last&&Date.now()-lt<2000)){
-     last=code;lt=Date.now();navigator.vibrate&&navigator.vibrate(60);beep();
+    /* aynı kod art arda okunmadan kabul edilmez (yanlış okumayı azaltır) */
+    if(code){miss=0;if(code===cand)cnt++;else{cand=code;cnt=1}}
+    else if(++miss>=3){cand='';cnt=0}
+    const now=Date.now();
+    if(on&&code&&cnt>=(isStd(code)?2:3)&&!(code===last&&now-lastSeen<800)){
+     last=code;navigator.vibrate&&navigator.vibrate(60);beep();
      if(!multi){stop();cb(code);return}
      cb(code);
     }
+    if(code&&code===last)lastSeen=now;
    }
   }catch(e){if(++errs>=5){stop();scanLib(cb);return}}
   setTimeout(loop,30);
@@ -551,6 +566,9 @@ $('#l_pw').addEventListener('keydown',e=>{if(e.key==='Enter')$('#l_go').click()}
 $('#out').onclick=async()=>{try{await sb.auth.signOut()}catch{}location.reload()};
 $('#reset').onclick=()=>{if(confirm('Bağlantı bilgisi silinsin mi?')){localStorage.removeItem('bk_cfg');location.reload()}};
 $('#reload').onclick=()=>load().then(()=>toast('Yenilendi'));
+$('#qx').onclick=()=>{$('#q').value='';renderSearch();$('#q').focus()};
+$('#zsave').onclick=()=>{setZM(+$('#zoom').value||1);toast('Açılış zoomu: x'+ZM)};
+$('#md_zm').onchange=()=>{const z=num($('#md_zm').value);if(z==null||z<1||z>10)return toast('1 ile 10 arasında bir değer girin',1);setZM(z);toast('Kaydedildi')};
 $('#q').oninput=renderSearch;$('#q').addEventListener('keydown',e=>{if(e.key==='Enter')e.target.blur()});
 $('#qscan').onclick=()=>scan(c=>{$('#q').value=c;renderSearch()});
 document.addEventListener('click',e=>{
@@ -725,6 +743,7 @@ function kfind(t){const raw=t.trim(),q=norm(raw);if(!q)return[];const ex=P.filte
  return P.filter(p=>q.split(/\s+/).every(w=>norm(p.name).includes(w)||(p.barcode||'').includes(w))).slice(0,6)}
 function kadd(p,quiet){const x=K.find(k=>k.id===p.id);if(x)x.q=r2(x.q+1);else K.push({id:p.id,q:1});$('#k_q').value='';paintCart();if(!quiet)$('#k_q').focus()}
 function paintCart(){
+ $('#kx').hidden=!$('#k_q').value;
  $('#k_res').innerHTML=kfind($('#k_q').value).map(p=>`<button class="alt kres" data-pid="${esc(p.id)}">${esc(p.name)} · <b>${TL(p.sell_price)}</b></button>`).join('');
  let tot=0;
  const h=K.map((k,i)=>{const p=k.man?null:P.find(x=>x.id===k.id);if(!k.man&&!p)return'';
@@ -734,6 +753,7 @@ function paintCart(){
  tot=r2(tot);$('#k_tot').textContent=TL(tot);
  const pay=num($('#k_pay').value);$('#k_chg').textContent=pay==null?'':pay>=tot?'Para üstü: '+TL(r2(pay-tot)):'Eksik: '+TL(r2(tot-pay));
 }
+$('#kx').onclick=()=>{$('#k_q').value='';paintCart();$('#k_q').focus()};
 $('#k_q').oninput=paintCart;$('#k_pay').oninput=paintCart;
 $('#k_q').addEventListener('keydown',e=>{if(e.key==='Enter'){const f=kfind($('#k_q').value);if(f.length===1)kadd(f[0]);else e.target.blur()}});
 /* Sürekli tarama: kamera açık kalır, ürünler art arda sepete eklenir */
